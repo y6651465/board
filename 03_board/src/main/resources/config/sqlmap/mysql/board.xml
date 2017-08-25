@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.hm.board.mapper.BoardMapper">
+
+
+	<select id="boardList" parameterType="PageVO" resultType="BoardVO">
+		SELECT NO, TITLE, CONTENT, VIEW_COUNT, (SELECT COUNT(*) FROM TB_COMMENT where no = B.no) COUNT, (SELECT COUNT(LIKE_NO) FROM TB_LIKE WHERE NO = B.NO) LIKE_COUNT, REG_DATE
+		  FROM TB_BOARD B
+		 WHERE 
+		 	1 = 1
+		  <if test='#{wantSearch} != ""'>
+		  <choose>
+		  	<when test="#{whatSearch == 1}">
+		  	AND TITLE LIKE CONCAT('%',#{wantSearch},'%')
+		  	</when>
+		  	<when test="#{whatSearch == 2}">
+		  	AND CONTENT LIKE CONCAT('%',#{wantSearch},'%')
+		  	</when>
+		  	<when test="#{whatSearch == 3}">
+		  	 AND ID LIKE CONCAT('%',#{wantSearch},'%')
+		  	</when>
+		  </choose>
+		  </if>   
+		 ORDER BY NO DESC
+		 LIMIT #{begin}, #{listSize}
+	</select>
+	
+	
+	<select id="boardCount" parameterType="PageVO" resultType="int">
+		SELECT COUNT(*)
+		  FROM TB_BOARD
+		 WHERE 
+		 	1 = 1
+		 	  <if test='#{wantSearch} != ""'>
+		  <choose>
+		  	<when test="#{whatSearch == 1}">
+		  	AND TITLE LIKE CONCAT('%',#{wantSearch},'%')
+		  	</when>
+		  	<when test="#{whatSearch == 2}">
+		  	AND CONTENT LIKE CONCAT('%',#{wantSearch},'%')
+		  	</when>
+		  	<when test="#{whatSearch == 3}">
+		  	 AND ID LIKE CONCAT('%',#{wantSearch},'%')
+		  	</when>
+		  </choose>
+		  </if>  
+	</select>
+	
+	<update id="viewCount" parameterType="int">
+		UPDATE TB_BOARD 
+		   SET VIEW_COUNT = VIEW_COUNT+1
+		 WHERE NO = #{no}
+	</update>
+	
+	<select id="boardDetail" resultType="BoardVO">
+		SELECT NO, TITLE, CONTENT, REG_DATE, ID, (SELECT COUNT(LIKE_NO) FROM TB_LIKE) COUNT
+		  FROM TB_BOARD
+		 WHERE NO = #{no}
+	</select>
+	
+	<update id="boardUpdate" parameterType="BoardVO">
+		UPDATE TB_BOARD
+		   SET TITLE = #{title},
+		       CONTENT = #{content}
+		 WHERE NO = #{no}
+	</update>
+	
+	<delete id="boardDelete" parameterType="int">
+		DELETE
+		  FROM TB_BOARD
+		 WHERE NO = #{no}	
+	</delete>
+	
+	<insert id="boardWrite" parameterType="BoardVO">
+		<selectKey resultType="int" keyProperty="no" order="AFTER">
+	        SELECT LAST_INSERT_ID()
+	    </selectKey> 
+		INSERT INTO TB_BOARD(TITLE, CONTENT, ID)
+		VALUES (#{title}, #{content}, #{id})
+	</insert>
+	
+	<!-- 추천 -->
+	
+	<select id="likeCnt" resultType="int">
+		SELECT COUNT(LIKE_NO) LIKE_NO
+		  FROM TB_LIKE
+		 WHERE NO = #{no}
+		   AND LIKE_NO = #{like_no}
+	</select>
+	
+	<select id="likeSelect" parameterType="LikeVO" resultType="LikeVO">
+		SELECT LIKE_NO, NO, ID
+		  FROM TB_LIKE
+		 WHERE NO = #{no}
+		   AND ID = #{id}
+	</select>
+	
+	<delete id="deleteLike" parameterType="LikeVO">
+		DELETE
+		  FROM TB_LIKE
+		 WHERE ID = #{id}
+		   AND NO = #{no}
+	</delete>
+		
+	<insert id="insertLike" parameterType="LikeVO">
+		INSERT INTO TB_LIKE (LIKE_NO, NO, ID)
+		VALUES (#{like_no}, #{no}, #{id})
+	</insert>
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	<!-- 댓글 -->
+	
+	<insert id="commentWrite" parameterType="CommentVO">
+		INSERT INTO TB_COMMENT(NO, COMMENT_CONTENT, ID)
+		VALUES (#{no}, #{comment_content}, #{id})
+	</insert>
+	
+	<update id="commentUpdate" parameterType="CommentVO">
+		UPDATE TB_COMMENT
+		   SET COMMENT_CONTENT = #{comment_content}
+		 WHERE COMMENT_NO = #{comment_no}
+	</update>
+	
+	<select id="commentList" resultType="CommentVO">
+		SELECT COMMENT_NO, NO, COMMENT_CONTENT, ID, COMMENT_REG_DATE, PARENT_COMMENT
+		  FROM TB_COMMENT
+		 WHERE NO = #{no}
+		 ORDER BY COMMENT_NO DESC
+	</select>
+	
+	<delete id="commentDelete">
+		DELETE
+		  FROM TB_COMMENT
+		 WHERE COMMENT_NO = #{comment_no}
+	</delete>
+	
+	<select id="commentCount" parameterType="int" resultType="int">
+		SELECT COUNT(*)
+		  FROM TB_COMMENT
+		 WHERE NO = #{no};
+	</select>
+	<!-- 대댓글 리스트 -->
+	<select id="replyComment" resultType="CommentVO">
+		SELECT R.COMMENT_NO, R.NO, R.COMMENT_CONTENT, R.ID, R.COMMENT_REG_DATE, r.parent_comment
+  		  FROM TB_COMMENT C, TB_COMMENT R
+		 WHERE C.COMMENT_NO = R.PARENT_COMMENT
+		   AND C.NO = #{no}
+		 ORDER BY R.COMMENT_NO DESC
+	</select>
+	
+	<!-- 댓글 한개만 출력하기 -->
+	
+<!-- 	<select id="commentOne" parameterType="int" resultType="CommentVO"> -->
+<!-- 		SELECT COMMENT_NO, NO, COMMENT_CONTENT, ID, COMMENT_REG_DATE -->
+<!-- 		  FROM TB_COMMENT -->
+<!-- 		 WHERE COMMENT_NO = #{comment_no} -->
+<!-- 	</select> -->
+	
+	
+	
+	<!-- 파일  -->
+	
+	<insert id="insertFile" parameterType="FileVO">
+		INSERT INTO TB_FILE (NO, ORI_NAME, FILE_PATH, SYSTEM_NAME)    
+		VALUES (#{no}, #{ori_name}, #{file_path}, #{system_name})
+	</insert>
+	
+	<update id="updateFile" parameterType="FileVO">
+		UPDATE TB_FILE
+		   SET #{ori_name},
+		       #{file_path},
+		       #{system_name}
+		 WHERE NO = #{no}
+	</update>
+	
+	<select id="selectFile" parameterType="FileVO" resultType="FileVO">
+		SELECT ORI_NAME, FILE_PATH, SYSTEM_NAME
+		  FROM TB_FILE
+		 WHERE NO = #{no}
+	</select>
+	
+	
+	
+	
+</mapper>

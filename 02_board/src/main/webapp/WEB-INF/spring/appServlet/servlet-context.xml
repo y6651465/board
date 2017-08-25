@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:p="http://www.springframework.org/schema/p" 
+	xmlns:tx="http://www.springframework.org/schema/tx" 
+	xmlns:mvc="http://www.springframework.org/schema/mvc" 
+	xmlns:aop="http://www.springframework.org/schema/aop" 
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans   
+    http://www.springframework.org/schema/beans/spring-beans.xsd
+    http://www.springframework.org/schema/context   
+    http://www.springframework.org/schema/context/spring-context.xsd
+    http://www.springframework.org/schema/tx   
+    http://www.springframework.org/schema/tx/spring-tx.xsd
+    http://www.springframework.org/schema/aop   
+    http://www.springframework.org/schema/aop/spring-aop.xsd
+    http://www.springframework.org/schema/mvc
+    http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+
+	<context:component-scan base-package="kr.hm.board" />
+	<mvc:annotation-driven>
+		<mvc:message-converters>
+			<bean class="org.springframework.http.converter.StringHttpMessageConverter">
+				<property name="supportedMediaTypes">
+					<list>
+						<value>text/html; charset=UTF-8</value>
+					</list>
+				</property>
+			</bean>
+			<bean
+				class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
+				<property name="supportedMediaTypes">
+					<list>
+						<value>text/html; charset=UTF-8</value>
+						<value>application/json; charset=UTF-8</value>
+					</list>
+				</property>
+			</bean>
+		</mvc:message-converters>
+	</mvc:annotation-driven>
+
+	<bean id="multipartResolver"
+		class="org.springframework.web.multipart.commons.CommonsMultipartResolver"> <!-- 최대 업로드 파일 사이즈 : 10MB -->
+		<property name="maxUploadSize" value="10485760" />
+	</bean>
+
+
+	<mvc:view-controller path="/file/uploadForm.do"
+		view-name="file/fileUploadForm" />
+
+	<!-- mybatis 객체 준비 -->
+	<context:property-placeholder 
+		location="classpath:config/mybatis/db.properties" />
+	
+	
+	<bean id="dataSource" 
+          class="org.springframework.jdbc.datasource.DriverManagerDataSource"
+      	  p:driverClassName="${driver}"
+          p:url="${url}"
+          p:username="${username}" 
+          p:password="${password}" />
+
+	<bean id="sqlSessionFactory" 
+	      class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="typeAliasesPackage" value="kr.hm.board.vo" />			
+		<property name="mapperLocations" value="classpath:config/sqlmap/oracle/*.xml" />
+	</bean>
+
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="kr.hm.board.mapper" />
+	</bean>
+	
+	<!-- 트랜잭션 처리  -->
+	<aop:config>
+		<aop:pointcut id="tranMethod" expression="execution(public * kr.co.mlec..service.*Impl.*(..)) "/>
+		<aop:advisor advice-ref="txAdvice" pointcut-ref="tranMethod" />
+	</aop:config>
+
+
+</beans>
+
+
+
+
+
+
+
+
+
+
