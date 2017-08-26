@@ -1,0 +1,55 @@
+{
+  "ecmaVersion": 5,
+  "plugins": {
+    "guess-types": {
+      
+    },
+    "outline": {
+      
+    },
+    "push": {
+      
+    },
+    "webpack": {
+      
+    },
+    "gas": {
+      
+    },
+    "node": {
+      
+    },
+    "requirejs": {
+      
+    },
+    "gcharts": {
+      
+    },
+    "gmaps3.frozen": {
+      
+    },
+    "browser-extension": {
+      
+    },
+    "threejs": {
+      
+    },
+    "jquery-ui1-12": {
+      
+    },
+    "bootstrap": {
+      
+    },
+    "jquery-extension": {
+      
+    },
+    "jquery-mobile1.5": {
+      
+    }
+  },
+  "libs": [
+    "ecma5",
+    "browser",
+    "jquery"
+  ]
+}
